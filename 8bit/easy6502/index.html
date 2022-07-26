@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037) -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta property="twitter:account_id" content="17736965">
+    <meta name="description" content="6502|nes|红白机">
+    <title>Easy 6502</title>
+    <link rel="stylesheet" href="./static/styles.css">
+    <link rel="stylesheet" href="./static/style.css">
+    <link rel="stylesheet" href="./static/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Easy 6502</h1>
+        <p><em>by</em> <a href="https://twitter.com/skilldrick">Nick Morgan</a>, licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></p>
+        <p class="view">
+          <a href="https://github.com/skilldrick/easy6502/tree/gh-pages">from</a>
+          <a href="https://gitee.com/zmwcodediy/diy-asm/tree/master">gitee</a>
+        </p>
+        <ul>
+          <li><a href="#intro">介绍</a></li>
+          <li><a href="#first-program">第一个程序</a></li>
+          <li><a href="#registers">寄存器和标志位</a></li>
+          <li><a href="#instructions">指令集</a></li>
+          <li><a href="#branching">条件分支</a></li>
+          <li><a href="#addressing">寻址模式</a></li>
+          <li><a href="#stack">调用栈</a></li>
+          <li><a href="#jumping">跳转</a></li>
+          <li><a href="#snake">创建简单游戏</a></li>
+        </ul>
+      </header>
+      <section>
+
+        <h2 id="intro">介绍</h2>
+
+<p>在这个网页中，我(原作者)将解析如何开始编写6502汇编语言. 6502处理器在70到80年代广泛应用到各种知名电脑中
+<a href="http://en.wikipedia.org/wiki/BBC_Micro">BBC Micro</a>,
+<a href="http://en.wikipedia.org/wiki/Atari_2600">Atari 2600</a>,
+<a href="http://en.wikipedia.org/wiki/Commodore_64">Commodore 64</a>,
+<a href="http://en.wikipedia.org/wiki/Apple_II">Apple II</a>, 还有 <a href="http://en.wikipedia.org/wiki/Nintendo_Entertainment_System">Nintendo Entertainment
+System(NES任天堂游戏机)</a>. Bender in Futurama (<a href="https://baike.baidu.com/item/%E9%A3%9E%E5%87%BA%E4%B8%AA%E6%9C%AA%E6%9D%A5/10473945">飞出个未来)</a>
+<a href="http://www.transbyte.org/SID/SID-files/Bender_6502.jpg"></a>中有个使用6502模拟的大脑. <a href="http://www.pagetable.com/docs/terminator/00-37-23.jpg">Even the
+Terminator(终结者游戏)</a>也是用
+6502实现的.</p>
+
+<p>那么，为什么要学习6502，这个已经快要失传的语言。除了
+<a href="http://en.wikipedia.org/wiki/Q.E.D.">Q.E.D.</a>还在开设教学6520</p>
+
+<p>(事实上,6502还在生成中<a href="http://www.westerndesigncenter.com/wdc/w65c02s-chip.cfm">Western Design Center</a>
+and <a href="http://www.mouser.co.uk/Search/Refine.aspx?Keyword=65C02">出售给业余爱好者</a>,那么可以说6502
+ 并未失传! 谁又能说清楚这其中的缘由?)</p>
+
+<p>严肃来讲，我(原作者)能够理解汇编语言价值非凡.汇编语言是计算机描述中最低级的可阅读的代码.汇编语言直接翻译为计算机处理器可识别的字节码.如果能够掌握汇编，那么您将被称为
+<a href="http://skilldrick.co.uk/2011/04/magic-in-software-development/">操控计算机的高级巫师</a>.</p>
+
+<p>那么为什么是6502汇编?而不是一门常用的汇编语言,比如
+<a href="http://en.wikipedia.org/wiki/X86">x86</a>? 好吧，我觉得学些x86并不是那么有用. 现在的工作中很少使用x86汇编,通常只是个人的教学练习，或者是闲暇时组织的思维.然后6502是在那个时代真正被广泛应有的语言,不像现在的汇编是高级语言的产物.所有6502汇编是设计为人类编写友好的汇编语言。所以还是值得学些.</p>
+
+<h2 id="first-program">第一个程序</h2>
+
+<p>那么，让我开始吧。下面是一个转为本网页设计的js实现的的<a href="https://github.com/skilldrick/6502js">6502汇编器与模拟器</a>.
+首先点击<strong>汇编编译，</strong>然后点击<strong> 运行，</strong>将会编译和执行其中的汇编代码.</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="汇编编译" class="assembleButton">
+    <input type="button" value="运行" class="runButton">
+    <input type="button" value="重置" class="resetButton">
+    <input type="button" value="打印16进制" class="hexdumpButton">
+    <input type="button" value="反编译" class="disassembleButton">
+    <input type="button" value="说明框" class="notesButton">
+  </div>
+
+  <textarea class="code">
+LDA #$01
+STA $0200
+LDA #$05
+STA $0201
+LDA #$08
+STA $0202
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">开启Debugger(调试)</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step(单步)" class="stepButton">
+      <input type="button" value="Jump to(跳转到)" class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">说明:
+    内存$fe在每条指令中包含一个随机类型。
+    内存$ff则包含最后的按键ascii编码。
+    内存$200到$5ff映射到屏幕的像素,其中的值带班不同的颜色:
+
+$0: Black(黑)
+$1: White(白)
+$2: Red(红)
+$3: Cyan(蓝绿)
+$4: Purple(紫)
+$5: Green(绿)
+$6: Blue(蓝)
+$7: Yellow(黄)
+$8: Orange(橙)
+$9: Brown(棕色)
+$a: Light red(淡红)
+$b: Dark grey(深灰)
+$c: Grey(灰色)
+$d: Light green(淡绿)
+$e: Light blue(淡蓝)
+$f: Light grey(淡灰)
+    </div>
+</div>
+
+<p>一切顺利的话,右边的黑色区域的前三个像素(如果没有看到效果,请确认使用谷歌浏览器或者火狐刘拉去.)</p>
+
+<p>让我们通过debugger单步调试看看其中发生的事情. 首先点击 <strong>重置</strong>,然后勾选上调试<strong>Debugger</strong>开始调试. 点击一下<strong>Step(单步)</strong> . 如果仔细看的话 <code class="language-plaintext highlighter-rouge">A</code> 从<code class="language-plaintext highlighter-rouge">$00</code> 变为了 <code class="language-plaintext highlighter-rouge">$01</code>, and <code class="language-plaintext highlighter-rouge">PC=</code> 从 <code class="language-plaintext highlighter-rouge">$0600</code> 变为了
+<code class="language-plaintext highlighter-rouge">$0602</code>.</p>
+
+<p>6502中以 <code class="language-plaintext highlighter-rouge">$</code>开始的数字表示为<a href="https://baike.baidu.com/item/%E5%8D%81%E5%85%AD%E8%BF%9B%E5%88%B6/4162457">16进制(hex)格式</a>. 
+<p>6502中以<code class="language-plaintext highlighter-rouge">#</code>开头的十六进制是一个数字字面量</p>
+<p>其他的十六进制数字都表示内存的地址.</p>
+
+<p>那么让我根据上面所说的分析下汇编代码
+<code class="language-plaintext highlighter-rouge">LDA #$01</code> 加载十六进制<code class="language-plaintext highlighter-rouge">$01</code>到寄存器<code class="language-plaintext highlighter-rouge">A</code>. 寄存器在下面的小节介绍.</p>
+
+<p>再次点击<strong>Step</strong> 执行第二个指令.显示模拟器的第一个像素变为了白色.</p>
+<p>显示器模拟器使用内存的<code class="language-plaintext highlighter-rouge">$0200</code>到<code class="language-plaintext highlighter-rouge">$05ff</code>保存对应的像素值. 十六进制 <code class="language-plaintext highlighter-rouge">$00</code> 到
+<code class="language-plaintext highlighter-rouge">$0f</code>代表16种颜色 (<code class="language-plaintext highlighter-rouge">$00</code> 是黑色,<code class="language-plaintext highlighter-rouge">$01</code> 是白色), 那么第二条指令STA 将寄存器A的值
+storing the value <code class="language-plaintext highlighter-rouge">$01</code> 存储到内存<code class="language-plaintext highlighter-rouge">$0200</code>表示在第一个像素绘制白色.不要惊讶，这是电脑显示的真实原理,即使现在也是这样。</p>
+
+<p>那么第二条指令 <code class="language-plaintext highlighter-rouge">STA $0200</code>存储寄存器 <code class="language-plaintext highlighter-rouge">A</code> 的值到内存中<code class="language-plaintext highlighter-rouge">$0200</code>. 接下来点击4次<strong>Step</strong>观察寄存器<code class="language-plaintext highlighter-rouge">A</code>的值.</p>
+
+<h3 id="exercises">练习</h3>
+
+<ol>
+  <li>试着修改前3个像素的颜色.</li>
+  <li>试着修改内存中的最后一个像素的颜色 (内存地址是) <code class="language-plaintext highlighter-rouge">$05ff</code>).</li>
+  <li>试着绘制更多的像素.</li>
+</ol>
+
+<h2 id="registers">寄存器与标志位</h2>
+
+<p>上面我们简单说明了寄存器
+<code class="language-plaintext highlighter-rouge">A</code>的操作, <code class="language-plaintext highlighter-rouge">那么其余的像X,Y到PC</code>等.),又表示什么??</p>
+
+<p>其中第一排的<code class="language-plaintext highlighter-rouge">A</code>, <code class="language-plaintext highlighter-rouge">X</code> 和 <code class="language-plaintext highlighter-rouge">Y</code> 寄存器中 (<code class="language-plaintext highlighter-rouge">A</code> 称为累加器(accumulator).每个寄存器保存一个字节(byte),也就是8位二进制.大多数操作是操作A,X,Y3个寄存器.</p>
+
+<p><code class="language-plaintext highlighter-rouge">SP</code>表示栈(stack)指针,栈将在下面进行说明，现在只需要知道SP每次都以字节的大小增减,.</p>
+
+<p><code class="language-plaintext highlighter-rouge">PC</code>程序计数器,表示程序执行的指令位置.
+  可以看做汇编脚本的行数，js模拟器中代码从内存的<code class="language-plaintext highlighter-rouge">$0600</code>开始,所以默认 <code class="language-plaintext highlighter-rouge">PC</code> 开始值就是$0600.</p>
+
+<p>最后的部分就是CPU的标志位.每个标志位(flag)使用一个二进制(0或者1),使用一个字节(8个二进制)保存了所有的标志位(flag) . 标志位根据前一条指令的执行结果进行赋值.点击链接 <a href="http://www.obelisk.me.uk/6502/registers.html">了解更多的寄存器与标志位</a>.</p>
+
+<h2 id="instructions">指令集</h2>
+
+<p>指令集可以看做汇编语言中的预定义函数.所有的指令可以接受0个或者1个参数,
+  下面的代码使用了一些部分指令:</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="汇编编译" class="assembleButton">
+    <input type="button" value="运行" class="runButton">
+    <input type="button" value="重置" class="resetButton">
+    <input type="button" value="16进制打印" class="hexdumpButton">
+    <input type="button" value="反编译" class="disassembleButton">
+    <input type="button" value="说明" class="notesButton">
+  </div>
+
+  <textarea class="code">
+LDA #$c0  ;加载十六进制$c0到寄存器A
+TAX       ;将寄存器A的值传递给寄存器X
+INX       ;将寄存器X的值递增
+ADC #$c4  ;将十六机制的$c4加到寄存器A
+BRK       ;Break跳出执行
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+    内存$fe在每条指令中包含一个随机类型。
+    内存$ff则包含最后的按键ascii编码。
+    内存$200到$5ff映射到屏幕的像素,其中的值带班不同的颜色:
+
+$0: Black(黑)
+$1: White(白)
+$2: Red(红)
+$3: Cyan(蓝绿)
+$4: Purple(紫)
+$5: Green(绿)
+$6: Blue(蓝)
+$7: Yellow(黄)
+$8: Orange(橙)
+$9: Brown(棕色)
+$a: Light red(淡红)
+$b: Dark grey(深灰)
+$c: Grey(灰色)
+$d: Light green(淡绿)
+$e: Light blue(淡蓝)
+$f: Light grey(淡灰)
+    </div>
+</div>
+
+<p>编译上面的代码,然后开始单步调试,注意观察寄存器 <code class="language-plaintext highlighter-rouge">A</code>和寄存器<code class="language-plaintext highlighter-rouge">X</code> .在<code class="language-plaintext highlighter-rouge">ADC #$c4</code>指令中出现了一些不一样的事情.正常情况下<code class="language-plaintext highlighter-rouge">$c4</code> + <code class="language-plaintext highlighter-rouge">$c0</code> 应该得到 <code class="language-plaintext highlighter-rouge">$184</code>, 然而cpu只是将寄存器A设置为 <code class="language-plaintext highlighter-rouge">$84</code>. 其中发生了什么事情?</p>
+
+<p>原来是因为, <code class="language-plaintext highlighter-rouge">$184</code>已经超出了一个寄存器能够容纳的最大的值<code class="language-plaintext highlighter-rouge">$FF</code>),寄存器只保存了小于$FF的内容. cpu并没有计算错误.如果仔细观察可以发现进位标志位(carry flag)被设置为<code class="language-plaintext highlighter-rouge">1</code> . 这就是加法中进位标志位的用法.</p>
+
+<p>复制下面的代码:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+LDA #$80
+STA $01
+ADC $01
+</code></pre></div></div>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="汇编编译" class="assembleButton">
+    <input type="button" value="运行" class="runButton">
+    <input type="button" value="重置" class="resetButton">
+    <input type="button" value="十六进制打印" class="hexdumpButton">
+    <input type="button" value="反编译" class="disassembleButton">
+    <input type="button" value="说明" class="notesButton">
+  </div>
+
+  <textarea class="code"></textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+    内存$fe在每条指令中包含一个随机类型。
+    内存$ff则包含最后的按键ascii编码。
+    内存$200到$5ff映射到屏幕的像素,其中的值带班不同的颜色:
+
+$0: Black(黑)
+$1: White(白)
+$2: Red(红)
+$3: Cyan(蓝绿)
+$4: Purple(紫)
+$5: Green(绿)
+$6: Blue(蓝)
+$7: Yellow(黄)
+$8: Orange(橙)
+$9: Brown(棕色)
+$a: Light red(淡红)
+$b: Dark grey(深灰)
+$c: Grey(灰色)
+$d: Light green(淡绿)
+$e: Light blue(淡蓝)
+$f: Light grey(淡灰)
+    </div>
+</div>
+
+<p>注意比较<code class="language-plaintext highlighter-rouge">ADC #$01</code> and
+<code class="language-plaintext highlighter-rouge">ADC $01</code>的区别.前一个将值 <code class="language-plaintext highlighter-rouge">$01</code>累加到寄存器 <code class="language-plaintext highlighter-rouge">A</code> , 后一个将内存中 <code class="language-plaintext highlighter-rouge">$01</code> 累加到寄存器<code class="language-plaintext highlighter-rouge">A</code> .</p>
+
+<p>汇编编译,然后打开监控器<strong>Monitor</strong> , 单步调试指令.监控器用来观察指令运行时内存中的值. <code class="language-plaintext highlighter-rouge">STA $01</code> 将寄存器<code class="language-plaintext highlighter-rouge">A</code>的值转存到内存中<code class="language-plaintext highlighter-rouge">$01</code>, 然后 <code class="language-plaintext highlighter-rouge">ADC $01</code> 将内存中的值<code class="language-plaintext highlighter-rouge">$01</code> 累加到寄存器 <code class="language-plaintext highlighter-rouge">A</code> . <code class="language-plaintext highlighter-rouge">$80 + $80</code>应该是 <code class="language-plaintext highlighter-rouge">$100</code>,超过最大值进位, 寄存器 <code class="language-plaintext highlighter-rouge">A</code> 设置为 <code class="language-plaintext highlighter-rouge">$00</code> 进位标志位置1. 另外零标志位(zero flag)也置1.</p>
+
+<p>6502的所有指令<a href="http://www.6502.org/tutorials/6502opcodes.html"> 在这里</a> 列出and
+<a href="http://www.obelisk.me.uk/6502/reference.html">和这里</a>.</p>
+
+<h3 id="exercises-1">练习</h3>
+
+<ol>
+  <li>看到上面的<code class="language-plaintext highlighter-rouge">TAX</code>.  <code class="language-plaintext highlighter-rouge">那么指令TAY</code>是否也是这样呢, <code class="language-plaintext highlighter-rouge">TXA</code> 和 <code class="language-plaintext highlighter-rouge">TYA</code>是否相同 ,编写代码进行测试.</li>
+  <li>重新代码使用寄存器<code class="language-plaintext highlighter-rouge">Y</code>代替寄存器<code class="language-plaintext highlighter-rouge">X</code> .</li>
+  <li>与ADC累加相反的是 <code class="language-plaintext highlighter-rouge">ADC</code> is <code class="language-plaintext highlighter-rouge">SBC</code> 借位减.试着编写代码.</li>
+</ol>
+
+<h2 id="branching">分支</h2>
+
+<p>前面的代码都是按照顺序执行的，下面说明分支执行.</p>
+
+<p>6502汇编包含多个分支指令,都是基于标志位的状态进行判断,实例中以<code class="language-plaintext highlighter-rouge">BNE</code>(Branch on not equal)进行说明.</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="汇编编译" class="assembleButton">
+    <input type="button" value="运行" class="runButton">
+    <input type="button" value="重置" class="resetButton">
+    <input type="button" value="16进制打印" class="hexdumpButton">
+    <input type="button" value="反编译" class="disassembleButton">
+    <input type="button" value="说明" class="notesButton">
+  </div>
+
+  <textarea class="code">
+  LDX #$08
+decrement:
+  DEX
+  STX $0200
+  CPX #$03
+  BNE decrement
+  STX $0201
+  BRK
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+    内存$fe在每条指令中包含一个随机类型。
+    内存$ff则包含最后的按键ascii编码。
+    内存$200到$5ff映射到屏幕的像素,其中的值带班不同的颜色:
+
+$0: Black(黑)
+$1: White(白)
+$2: Red(红)
+$3: Cyan(蓝绿)
+$4: Purple(紫)
+$5: Green(绿)
+$6: Blue(蓝)
+$7: Yellow(黄)
+$8: Orange(橙)
+$9: Brown(棕色)
+$a: Light red(淡红)
+$b: Dark grey(深灰)
+$c: Grey(灰色)
+$d: Light green(淡绿)
+$e: Light blue(淡蓝)
+$f: Light grey(淡灰)
+    </div>
+</div>
+
+<p>首先我们加载 <code class="language-plaintext highlighter-rouge">$08</code> 到寄存器 <code class="language-plaintext highlighter-rouge">X</code> . 接着是一个label声明.用来作为跳转标记.接着是自增寄存器<code class="language-plaintext highlighter-rouge">X</code>, 然后存储到内存中 <code class="language-plaintext highlighter-rouge">$0200</code> (the top-left pixel),并与 <code class="language-plaintext highlighter-rouge">$03</code>进行比较.
+<a href="http://www.obelisk.me.uk/6502/reference.html#CPX"><code class="language-plaintext highlighter-rouge">CPX</code></a> 指令比较寄存器 <code class="language-plaintext highlighter-rouge">X</code> 与另一个值.如果相等标志位
+<code class="language-plaintext highlighter-rouge">Z</code>设置为 <code class="language-plaintext highlighter-rouge">1</code>, 否则设置为0<code class="language-plaintext highlighter-rouge">0</code>.</p>
+
+<p>接着的, <code class="language-plaintext highlighter-rouge">BNE decrement</code>,会根据标志位 <code class="language-plaintext highlighter-rouge">Z</code> 是否为 <code class="language-plaintext highlighter-rouge">0</code>进行跳转.也就是直到指令<code class="language-plaintext highlighter-rouge">CPX</code>得到相等的结果为1，然后将寄存器 <code class="language-plaintext highlighter-rouge">X</code> 存储到 <code class="language-plaintext highlighter-rouge">$0201</code>, 最后结束.</p>
+
+<p>在汇编语言中，经常使用label作为分支跳转标记.代码编译后label将转换为相对地址，因此分支指令可以前进或者后退，然后只能在256bytes使用branch分支指令，如果需要跳转更远的就需要jump指令.</p>
+
+<h3 id="exercises-2">练习</h3>
+
+<ol>
+  <li>与 <code class="language-plaintext highlighter-rouge">BNE</code> 相反的是 <code class="language-plaintext highlighter-rouge">BEQ</code>. 试着编写<code class="language-plaintext highlighter-rouge">BEQ</code>相关程序.</li>
+  <li><code class="language-plaintext highlighter-rouge">BCC</code> 和 <code class="language-plaintext highlighter-rouge">BCS</code> (“branch on carry clear” and “branch on carry set”) 是进位清楚和进位设置分支.试着编写相关程序</li>
+</ol>
+
+<h2 id="addressing">寻址模式Addressing modes</h2>
+
+<p>6502使用16bit地址总线，意味着处理器可以访问到 65536(2的16次方) bytes的内存.通常使用十六进制 <code class="language-plaintext highlighter-rouge">$0000 -
+$ffff</code>表示. 下面介绍内存寻址的方式.</p>
+
+<p>可以使用内存监控器观察内存.其中的设置值都是十六进制表示 ,比如观察 <code class="language-plaintext highlighter-rouge">$c000</code>, enter <code class="language-plaintext highlighter-rouge">c000</code> 开始的 <code class="language-plaintext highlighter-rouge">10</code>
+个十六进制.</p>
+
+<h3 id="absolute-c000">绝对地址: <code class="language-plaintext highlighter-rouge">$c000</code></h3>
+
+<p>使用绝对地址时，所有的内存地址都可以作为参数使用. 比如:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>STA $c000 ;存储寄存器A的值到$c000内存处
+</code></pre></div></div>
+
+<h3 id="zero-page-c0">零页定位: <code class="language-plaintext highlighter-rouge">$c0</code></h3>
+
+<p>所有地址都支持绝对地址的指令(包括jump指令)都可以接受一个单字节地址参数, 这种地址称为零页地址缩写.仅仅用来访问开始的256bytes内存 ..</p>
+
+<h3 id="zero-pagex-c0x">零页,X: <code class="language-plaintext highlighter-rouge">$c0,X</code></h3>
+
+<p>从零页偏移寄存器 <code class="language-plaintext highlighter-rouge">X</code> 的内存地址.比如:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+LDX #$01   ;X is $01 寄存器x设置为01
+LDA #$aa   ;A is $aa 
+STA $a0,X ;Store the value of A at memory location $a1 存储到$a1
+INX        ;Increment X
+STA $a0,X ;Store the value of A at memory location $a2 存储到$a2
+</code></pre></div></div>
+
+<p>如果超过单个byte，则会返回从头开始.比如:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+LDX #$05 
+STA $ff,X ;Store the value of A at memory location $04 存储到$04
+</code></pre></div></div>
+
+<h3 id="zero-pagey-c0y">零页,Y: <code class="language-plaintext highlighter-rouge">$c0,Y</code></h3>
+
+<p>等价于上面的，不过只能用来寄存器X的操作 <code class="language-plaintext highlighter-rouge">LDX</code> 和<code class="language-plaintext highlighter-rouge">STX</code>.</p>
+
+<h3 id="absolutex-and-absolutey-c000x-and-c000y">绝对地址,X 和 绝对地址,Y: <code class="language-plaintext highlighter-rouge">$c000,X</code>,<code class="language-plaintext highlighter-rouge">$c000,Y</code></h3>
+
+<p>是分页的绝对地址版本.比如:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+LDX #$01
+STA $0200,X ;Store the value of A at memory location $0201 存储到$0201
+</code></pre></div></div>
+
+<h3 id="immediate-c0">立即寻址: <code class="language-plaintext highlighter-rouge">#$c0</code></h3>
+
+<p>立即值不涉及内存操作，只是操作具体数值. 比如, <code class="language-plaintext highlighter-rouge">LDX #$01</code> 加载数值
+<code class="language-plaintext highlighter-rouge">$01</code> 到寄存器 <code class="language-plaintext highlighter-rouge">X</code> 而<code class="language-plaintext highlighter-rouge">LDX $01</code>加载内存地址$01中的值到寄存器 <code class="language-plaintext highlighter-rouge">$01</code> into the
+<code class="language-plaintext highlighter-rouge">X</code> .</p>
+
+<h3 id="relative-c0-or-label">相对寻址: <code class="language-plaintext highlighter-rouge">$c0</code> (or label)</h3>
+
+<p>相对寻址通常在分支指令中使用,接受一个单byte地址.</p>
+
+<p>编译并打印 <strong>Hexdump</strong>查看汇编代码.</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="Assemble" class="assembleButton">
+    <input type="button" value="Run" class="runButton">
+    <input type="button" value="Reset" class="resetButton">
+    <input type="button" value="Hexdump" class="hexdumpButton">
+    <input type="button" value="Disassemble" class="disassembleButton">
+    <input type="button" value="Notes" class="notesButton">
+  </div>
+
+  <textarea class="code">
+  LDA #$01
+  CMP #$02
+  BNE notequal
+  STA $22
+notequal:
+  BRK
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+Memory location $fe contains a new random byte on every instruction.
+Memory location $ff contains the ascii code of the last key pressed.
+
+Memory locations $200 to $5ff map to the screen pixels. Different values will
+draw different colour pixels. The colours are:
+
+$0: Black
+$1: White
+$2: Red
+$3: Cyan
+$4: Purple
+$5: Green
+$6: Blue
+$7: Yellow
+$8: Orange
+$9: Brown
+$a: Light red
+$b: Dark grey
+$c: Grey
+$d: Light green
+$e: Light blue
+$f: Light grey
+    </div>
+</div>
+
+<p>十六进制应该是这样的结果:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>a9 01 c9 02 d0 02 85 22 00
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">a9</code> and <code class="language-plaintext highlighter-rouge">c9</code> 表示操作码 <code class="language-plaintext highlighter-rouge">LDA</code> 和 <code class="language-plaintext highlighter-rouge">CMP</code>
+. <code class="language-plaintext highlighter-rouge">01</code> 和 <code class="language-plaintext highlighter-rouge">02</code> 是指令的参数. <code class="language-plaintext highlighter-rouge">d0</code> 操作码 <code class="language-plaintext highlighter-rouge">BNE</code>, 对应的参数是 <code class="language-plaintext highlighter-rouge">02</code>.以为跳过下面一条指令指令码+参数(<code class="language-plaintext highlighter-rouge">85 22</code>,对应源代码 <code class="language-plaintext highlighter-rouge">STA $22</code>). 试着修改代码 <code class="language-plaintext highlighter-rouge">STA</code>接受一个2byte的绝对地址,(比如将 <code class="language-plaintext highlighter-rouge">STA $22</code> 修改为<code class="language-plaintext highlighter-rouge">STA $2222</code>). 反编译查看 <code class="language-plaintext highlighter-rouge">BNE</code>将不是 <code class="language-plaintext highlighter-rouge">03</code>.</p>
+
+<h3 id="implicit(隐式)">Implicit</h3>
+
+<p>一些指令不操作内存地址，比如 (e.g. <code class="language-plaintext highlighter-rouge">INX</code> - 递增寄存器
+<code class="language-plaintext highlighter-rouge">X</code> ). 表示操作指定的隐式地址.</p>
+
+<h3 id="indirect-c000">Indirect(间接寻址): <code class="language-plaintext highlighter-rouge">($c000)</code></h3>
+
+<p>代码如下:</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="Assemble" class="assembleButton">
+    <input type="button" value="Run" class="runButton">
+    <input type="button" value="Reset" class="resetButton">
+    <input type="button" value="Hexdump" class="hexdumpButton">
+    <input type="button" value="Disassemble" class="disassembleButton">
+    <input type="button" value="Notes" class="notesButton">
+  </div>
+
+  <textarea class="code">
+LDA #$01
+STA $f0
+LDA #$cc
+STA $f1
+JMP ($00f0) ;dereferences to $cc01
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+Memory location $fe contains a new random byte on every instruction.
+Memory location $ff contains the ascii code of the last key pressed.
+
+Memory locations $200 to $5ff map to the screen pixels. Different values will
+draw different colour pixels. The colours are:
+
+$0: Black
+$1: White
+$2: Red
+$3: Cyan
+$4: Purple
+$5: Green
+$6: Blue
+$7: Yellow
+$8: Orange
+$9: Brown
+$a: Light red
+$b: Dark grey
+$c: Grey
+$d: Light green
+$e: Light blue
+$f: Light grey
+    </div>
+</div>
+
+<p>上面的例子中, <code class="language-plaintext highlighter-rouge">$f0</code> 存储的值 <code class="language-plaintext highlighter-rouge">$01</code> 和 <code class="language-plaintext highlighter-rouge">$f1</code> 存储的值
+<code class="language-plaintext highlighter-rouge">$cc</code>. 指令<code class="language-plaintext highlighter-rouge">JMP ($f0)</code> 接受<code class="language-plaintext highlighter-rouge">$f0</code> 和 <code class="language-plaintext highlighter-rouge">$f1</code> (<code class="language-plaintext highlighter-rouge">中的$01</code> 和 <code class="language-plaintext highlighter-rouge">$cc</code>) 然后组成一个绝对地址 <code class="language-plaintext highlighter-rouge">$cc01</code>, 试着单步调试 <code class="language-plaintext highlighter-rouge">JMP</code>指令,后面的 <a href="#jumping">Jumping</a>会再次说明.</p>
+
+<h3 id="indexed-indirect-c0x">索引间接寻址Indexed indirect: <code class="language-plaintext highlighter-rouge">($c0,X)</code></h3>
+
+<p>寄存器间接寻址, 根据$c0和寄存器 <code class="language-plaintext highlighter-rouge">X</code> 的值组成的绝对地址寻址，比如:</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="Assemble" class="assembleButton">
+    <input type="button" value="Run" class="runButton">
+    <input type="button" value="Reset" class="resetButton">
+    <input type="button" value="Hexdump" class="hexdumpButton">
+    <input type="button" value="Disassemble" class="disassembleButton">
+    <input type="button" value="Notes" class="notesButton">
+  </div>
+
+  <textarea class="code">
+LDX #$01
+LDA #$05
+STA $01
+LDA #$07
+STA $02
+LDY #$0a
+STY $0705
+LDA ($00,X)
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+Memory location $fe contains a new random byte on every instruction.
+Memory location $ff contains the ascii code of the last key pressed.
+
+Memory locations $200 to $5ff map to the screen pixels. Different values will
+draw different colour pixels. The colours are:
+
+$0: Black
+$1: White
+$2: Red
+$3: Cyan
+$4: Purple
+$5: Green
+$6: Blue
+$7: Yellow
+$8: Orange
+$9: Brown
+$a: Light red
+$b: Dark grey
+$c: Grey
+$d: Light green
+$e: Light blue
+$f: Light grey
+    </div>
+</div>
+
+<p>A->0102(0705).X->01(0705)</p>
+
+<h3 id="indirect-indexed-c0y">间接索引Indirect indexed: <code class="language-plaintext highlighter-rouge">($c0),Y</code></h3>
+
+<p>更为负责的寻址方式</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="Assemble" class="assembleButton">
+    <input type="button" value="Run" class="runButton">
+    <input type="button" value="Reset" class="resetButton">
+    <input type="button" value="Hexdump" class="hexdumpButton">
+    <input type="button" value="Disassemble" class="disassembleButton">
+    <input type="button" value="Notes" class="notesButton">
+  </div>
+
+  <textarea class="code">
+LDY #$01
+LDA #$03
+STA $01   ;$01->#$03
+LDA #$07
+STA $02   ;$02->#$07
+LDX #$0a  
+STX $0704 ;$0704->#$0a
+LDA ($01),Y ($01)
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+Memory location $fe contains a new random byte on every instruction.
+Memory location $ff contains the ascii code of the last key pressed.
+
+Memory locations $200 to $5ff map to the screen pixels. Different values will
+draw different colour pixels. The colours are:
+
+$0: Black
+$1: White
+$2: Red
+$3: Cyan
+$4: Purple
+$5: Green
+$6: Blue
+$7: Yellow
+$8: Orange
+$9: Brown
+$a: Light red
+$b: Dark grey
+$c: Grey
+$d: Light green
+$e: Light blue
+$f: Light grey
+    </div>
+</div>
+
+<p>.注意字节序</p>
+
+<h3 id="exercise">练习</h3>
+
+<ol>
+  <li>试着编写寻址模式的代码.</li>
+</ol>
+
+<h2 id="stack">调用栈</h2>
+
+<p>用来进行存储后进先出的值，包含push,pull(pop)2个操作.栈的当前深度使用栈指针寄存器保存.栈保存在内存的 <code class="language-plaintext highlighter-rouge">$0100</code> 到 <code class="language-plaintext highlighter-rouge">$01ff</code>.栈指针初始化为<code class="language-plaintext highlighter-rouge">$ff</code>, 指向内存的<code class="language-plaintext highlighter-rouge">$01ff</code>.等压入byte值时则变为 <code class="language-plaintext highlighter-rouge">$fe</code>, 也就是 <code class="language-plaintext highlighter-rouge">$01fe</code>.</p>
+
+<p>有2个栈操作指令 <code class="language-plaintext highlighter-rouge">PHA</code> and <code class="language-plaintext highlighter-rouge">PLA</code>, “push accumulator” and “pull
+accumulator”. 压入累加器值到stack.弹窗stack顶部值到累加器</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="Assemble" class="assembleButton">
+    <input type="button" value="Run" class="runButton">
+    <input type="button" value="Reset" class="resetButton">
+    <input type="button" value="Hexdump" class="hexdumpButton">
+    <input type="button" value="Disassemble" class="disassembleButton">
+    <input type="button" value="Notes" class="notesButton">
+  </div>
+
+  <textarea class="code">
+  LDX #$00
+  LDY #$00
+firstloop:
+  TXA
+  STA $0200,Y
+  PHA
+  INX
+  INY
+  CPY #$10
+  BNE firstloop ;loop until Y is $10
+secondloop:
+  PLA
+  STA $0200,Y
+  INY
+  CPY #$20      ;loop until Y is $20
+  BNE secondloop
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+Memory location $fe contains a new random byte on every instruction.
+Memory location $ff contains the ascii code of the last key pressed.
+
+Memory locations $200 to $5ff map to the screen pixels. Different values will
+draw different colour pixels. The colours are:
+
+$0: Black
+$1: White
+$2: Red
+$3: Cyan
+$4: Purple
+$5: Green
+$6: Blue
+$7: Yellow
+$8: Orange
+$9: Brown
+$a: Light red
+$b: Dark grey
+$c: Grey
+$d: Light green
+$e: Light blue
+$f: Light grey
+    </div>
+</div>
+
+<p>寄存器<code class="language-plaintext highlighter-rouge">X</code> 保存像素颜色,寄存器 <code class="language-plaintext highlighter-rouge">Y</code> 保存像素位置.绘制像素.</p>
+
+<h2 id="jumping">跳转Jumping</h2>
+
+<p>与分支指令功能相似，有2点不同。首先, jumps是无条件执行的, 还有,接受的是two-byte绝对地址. 小的代码程序中不需要操心后者.大型程序中jump是唯一的远距离跳转方式.</p>
+
+<h3 id="jmp">JMP</h3>
+
+<p><code class="language-plaintext highlighter-rouge">JMP</code> 无条件跳转，比如:</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="Assemble" class="assembleButton">
+    <input type="button" value="Run" class="runButton">
+    <input type="button" value="Reset" class="resetButton">
+    <input type="button" value="Hexdump" class="hexdumpButton">
+    <input type="button" value="Disassemble" class="disassembleButton">
+    <input type="button" value="Notes" class="notesButton">
+  </div>
+
+  <textarea class="code">
+  LDA #$03
+  JMP there
+  BRK
+  BRK
+  BRK
+there:
+  STA $0200
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+Memory location $fe contains a new random byte on every instruction.
+Memory location $ff contains the ascii code of the last key pressed.
+
+Memory locations $200 to $5ff map to the screen pixels. Different values will
+draw different colour pixels. The colours are:
+
+$0: Black
+$1: White
+$2: Red
+$3: Cyan
+$4: Purple
+$5: Green
+$6: Blue
+$7: Yellow
+$8: Orange
+$9: Brown
+$a: Light red
+$b: Dark grey
+$c: Grey
+$d: Light green
+$e: Light blue
+$f: Light grey
+    </div>
+</div>
+
+<h3 id="jsrrts">JSR/RTS</h3>
+
+<p><code class="language-plaintext highlighter-rouge">JSR</code> 和 <code class="language-plaintext highlighter-rouge">RTS</code> (“jump to subroutine” and “return from subroutine”) 经常一起使用. <code class="language-plaintext highlighter-rouge">JSR</code> 用来从当前位置跳转到另一个位置. <code class="language-plaintext highlighter-rouge">RTS</code> 返回到跳转前的位置.类似于函数调用与返回.</p>
+
+<p>实现机制是,指令 <code class="language-plaintext highlighter-rouge">JSR</code>将下一条指令的地址压入栈，然后跳转到目标. <code class="language-plaintext highlighter-rouge">RTS</code>则弹出栈中的位置，跳转到对应指令
+An example:</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="Assemble" class="assembleButton">
+    <input type="button" value="Run" class="runButton">
+    <input type="button" value="Reset" class="resetButton">
+    <input type="button" value="Hexdump" class="hexdumpButton">
+    <input type="button" value="Disassemble" class="disassembleButton">
+    <input type="button" value="Notes" class="notesButton">
+  </div>
+
+  <textarea class="code">
+  JSR init
+  JSR loop
+  JSR end
+
+init:
+  LDX #$00
+  RTS
+
+loop:
+  INX
+  CPX #$05
+  BNE loop
+  RTS
+
+end:
+  BRK
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+Memory location $fe contains a new random byte on every instruction.
+Memory location $ff contains the ascii code of the last key pressed.
+
+Memory locations $200 to $5ff map to the screen pixels. Different values will
+draw different colour pixels. The colours are:
+
+$0: Black
+$1: White
+$2: Red
+$3: Cyan
+$4: Purple
+$5: Green
+$6: Blue
+$7: Yellow
+$8: Orange
+$9: Brown
+$a: Light red
+$b: Dark grey
+$c: Grey
+$d: Light green
+$e: Light blue
+$f: Light grey
+    </div>
+</div>
+
+<p></p>
+
+<h2 id="snake">创建一个简单游戏</h2>
+
+<p>最后使用以上的功能实现一个贪吃蛇游戏.</p>
+
+
+<p>首先定义常量constants代码对应数字，在后面代码中使用.</p>
+
+<p>Here’s an example. Note that immediate operands are still prefixed with a <code class="language-plaintext highlighter-rouge">#</code>.</p>
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="Assemble" class="assembleButton">
+    <input type="button" value="Run" class="runButton">
+    <input type="button" value="Reset" class="resetButton">
+    <input type="button" value="Hexdump" class="hexdumpButton">
+    <input type="button" value="Disassemble" class="disassembleButton">
+    <input type="button" value="Notes" class="notesButton">
+  </div>
+
+  <textarea class="code">
+  define  sysRandom  $fe ; an address
+  define  a_dozen    $0c ; a constant
+ 
+  LDA sysRandom  ; equivalent to "LDA $fe"
+
+  LDX #a_dozen   ; equivalent to "LDX #$0c"
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+Memory location $fe contains a new random byte on every instruction.
+Memory location $ff contains the ascii code of the last key pressed.
+
+Memory locations $200 to $5ff map to the screen pixels. Different values will
+draw different colour pixels. The colours are:
+
+$0: Black
+$1: White
+$2: Red
+$3: Cyan
+$4: Purple
+$5: Green
+$6: Blue
+$7: Yellow
+$8: Orange
+$9: Brown
+$a: Light red
+$b: Dark grey
+$c: Grey
+$d: Light green
+$e: Light blue
+$f: Light grey
+    </div>
+</div>
+
+<p>下面的实例包含了所有代码.</p>
+
+<div class="widget">
+  <div class="buttons">
+    <input type="button" value="Assemble" class="assembleButton">
+    <input type="button" value="Run" class="runButton">
+    <input type="button" value="Reset" class="resetButton">
+    <input type="button" value="Hexdump" class="hexdumpButton">
+    <input type="button" value="Disassemble" class="disassembleButton">
+    <input type="button" value="Notes" class="notesButton">
+  </div>
+
+  <textarea class="code">
+;  ___           _        __ ___  __ ___
+; / __|_ _  __ _| |_____ / /| __|/  \_  )
+; \__ \ ' \/ _` | / / -_) _ \__ \ () / /
+; |___/_||_\__,_|_\_\___\___/___/\__/___|
+
+; Change direction: W A S D
+
+define appleL         $00 ; screen location of apple, low byte
+define appleH         $01 ; screen location of apple, high byte
+define snakeHeadL     $10 ; screen location of snake head, low byte
+define snakeHeadH     $11 ; screen location of snake head, high byte
+define snakeBodyStart $12 ; start of snake body byte pairs
+define snakeDirection $02 ; direction (possible values are below)
+define snakeLength    $03 ; snake length, in bytes
+
+; Directions (each using a separate bit)
+define movingUp      1
+define movingRight   2
+define movingDown    4
+define movingLeft    8
+
+; ASCII values of keys controlling the snake
+define ASCII_w      $77
+define ASCII_a      $61
+define ASCII_s      $73
+define ASCII_d      $64
+
+; System variables
+define sysRandom    $fe
+define sysLastKey   $ff
+
+
+  jsr init
+  jsr loop
+
+init:
+  jsr initSnake
+  jsr generateApplePosition
+  rts
+
+
+initSnake:
+  lda #movingRight  ;start direction
+  sta snakeDirection
+
+  lda #4  ;start length (2 segments)
+  sta snakeLength
+  
+  lda #$11
+  sta snakeHeadL
+  
+  lda #$10
+  sta snakeBodyStart
+  
+  lda #$0f
+  sta $14 ; body segment 1
+  
+  lda #$04
+  sta snakeHeadH
+  sta $13 ; body segment 1
+  sta $15 ; body segment 2
+  rts
+
+
+generateApplePosition:
+  ;load a new random byte into $00
+  lda sysRandom
+  sta appleL
+
+  ;load a new random number from 2 to 5 into $01
+  lda sysRandom
+  and #$03 ;mask out lowest 2 bits
+  clc
+  adc #2
+  sta appleH
+
+  rts
+
+
+loop:
+  jsr readKeys
+  jsr checkCollision
+  jsr updateSnake
+  jsr drawApple
+  jsr drawSnake
+  jsr spinWheels
+  jmp loop
+
+
+readKeys:
+  lda sysLastKey
+  cmp #ASCII_w
+  beq upKey
+  cmp #ASCII_d
+  beq rightKey
+  cmp #ASCII_s
+  beq downKey
+  cmp #ASCII_a
+  beq leftKey
+  rts
+upKey:
+  lda #movingDown
+  bit snakeDirection
+  bne illegalMove
+
+  lda #movingUp
+  sta snakeDirection
+  rts
+rightKey:
+  lda #movingLeft
+  bit snakeDirection
+  bne illegalMove
+
+  lda #movingRight
+  sta snakeDirection
+  rts
+downKey:
+  lda #movingUp
+  bit snakeDirection
+  bne illegalMove
+
+  lda #movingDown
+  sta snakeDirection
+  rts
+leftKey:
+  lda #movingRight
+  bit snakeDirection
+  bne illegalMove
+
+  lda #movingLeft
+  sta snakeDirection
+  rts
+illegalMove:
+  rts
+
+
+checkCollision:
+  jsr checkAppleCollision
+  jsr checkSnakeCollision
+  rts
+
+
+checkAppleCollision:
+  lda appleL
+  cmp snakeHeadL
+  bne doneCheckingAppleCollision
+  lda appleH
+  cmp snakeHeadH
+  bne doneCheckingAppleCollision
+
+  ;eat apple
+  inc snakeLength
+  inc snakeLength ;increase length
+  jsr generateApplePosition
+doneCheckingAppleCollision:
+  rts
+
+
+checkSnakeCollision:
+  ldx #2 ;start with second segment
+snakeCollisionLoop:
+  lda snakeHeadL,x
+  cmp snakeHeadL
+  bne continueCollisionLoop
+
+maybeCollided:
+  lda snakeHeadH,x
+  cmp snakeHeadH
+  beq didCollide
+
+continueCollisionLoop:
+  inx
+  inx
+  cpx snakeLength          ;got to last section with no collision
+  beq didntCollide
+  jmp snakeCollisionLoop
+
+didCollide:
+  jmp gameOver
+didntCollide:
+  rts
+
+
+updateSnake:
+  ldx snakeLength
+  dex
+  txa
+updateloop:
+  lda snakeHeadL,x
+  sta snakeBodyStart,x
+  dex
+  bpl updateloop
+
+  lda snakeDirection
+  lsr
+  bcs up
+  lsr
+  bcs right
+  lsr
+  bcs down
+  lsr
+  bcs left
+up:
+  lda snakeHeadL
+  sec
+  sbc #$20
+  sta snakeHeadL
+  bcc upup
+  rts
+upup:
+  dec snakeHeadH
+  lda #$1
+  cmp snakeHeadH
+  beq collision
+  rts
+right:
+  inc snakeHeadL
+  lda #$1f
+  bit snakeHeadL
+  beq collision
+  rts
+down:
+  lda snakeHeadL
+  clc
+  adc #$20
+  sta snakeHeadL
+  bcs downdown
+  rts
+downdown:
+  inc snakeHeadH
+  lda #$6
+  cmp snakeHeadH
+  beq collision
+  rts
+left:
+  dec snakeHeadL
+  lda snakeHeadL
+  and #$1f
+  cmp #$1f
+  beq collision
+  rts
+collision:
+  jmp gameOver
+
+
+drawApple:
+  ldy #0
+  lda sysRandom
+  sta (appleL),y
+  rts
+
+
+drawSnake:
+  ldx snakeLength
+  lda #0
+  sta (snakeHeadL,x) ; erase end of tail
+
+  ldx #0
+  lda #1
+  sta (snakeHeadL,x) ; paint head
+  rts
+
+
+spinWheels:
+  ldx #0
+spinloop:
+  nop
+  nop
+  dex
+  bne spinloop
+  rts
+
+
+gameOver:
+
+  </textarea>
+
+  <canvas class="screen" width="160" height="160"></canvas>
+
+  <div class="debugger">
+    <input type="checkbox" class="debug" name="debug">
+    <label for="debug">Debugger</label>
+    <div class="minidebugger"></div>
+    <div class="buttons">
+      <input type="button" value="Step" class="stepButton">
+      <input type="button" value="Jump to..." class="gotoButton">
+    </div>
+  </div>
+
+  <div class="monitorControls">
+    <label for="monitoring">Monitor</label>
+    <input type="checkbox" class="monitoring" name="monitoring">
+
+    <label for="start">Start: $</label>
+    <input type="text" value="0" class="start" name="start">
+    <label for="length">Length: $</label>
+    <input type="text" value="ff" class="length" name="length">
+  </div>
+
+  <div class="monitor"><pre><code></code></pre></div>
+  <div class="messages"><pre><code></code></pre></div>
+
+  <div class="notes" style="display: none">Notes:
+
+Memory location $fe contains a new random byte on every instruction.
+Memory location $ff contains the ascii code of the last key pressed.
+
+Memory locations $200 to $5ff map to the screen pixels. Different values will
+draw different colour pixels. The colours are:
+
+$0: Black
+$1: White
+$2: Red
+$3: Cyan
+$4: Purple
+$5: Green
+$6: Blue
+$7: Yellow
+$8: Orange
+$9: Brown
+$a: Light red
+$b: Dark grey
+$c: Grey
+$d: Light green
+$e: Light blue
+$f: Light grey
+    </div>
+</div>
+
+<h3 id="overall-structure">Overall structure</h3>
+
+<p>除了注释和声明后，前2条指令:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>jsr init
+jsr loop
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">init</code> and <code class="language-plaintext highlighter-rouge">loop</code> 是所2个核心内容. <code class="language-plaintext highlighter-rouge">init</code> 初始化游戏状态, and
+<code class="language-plaintext highlighter-rouge">loop</code>是游戏循环.</p>
+
+<p>在 <code class="language-plaintext highlighter-rouge">loop</code> 调用中，只是调用其他的子程序:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>loop:
+  jsr readkeys
+  jsr checkCollision
+  jsr updateSnake
+  jsr drawApple
+  jsr drawSnake
+  jsr spinwheels
+  jmp loop
+</code></pre></div></div>
+
+<p>首先, <code class="language-plaintext highlighter-rouge">readkeys</code> 检查是否有 (W, A, S, D) was
+按下, 如果有则修改前进放些. 然后,
+<code class="language-plaintext highlighter-rouge">checkCollision</code>检查碰撞.
+<code class="language-plaintext highlighter-rouge">updateSnake</code> 更新蛇的形状,接着,绘制apple和蛇. , <code class="language-plaintext highlighter-rouge">spinWheels</code>可以看做sleep.返回loop继续执行.</p>
+
+<h3 id="zero-page-usage">Zero page usage</h3>
+
+<p>零页用来存储游戏状态.</p>
+
+<h3 id="initialization">初始化Initialization</h3>
+
+<p><code class="language-plaintext highlighter-rouge">init</code> 包含2个子程序, <code class="language-plaintext highlighter-rouge">initSnake</code> 和
+<code class="language-plaintext highlighter-rouge">generateApplePosition</code>. <code class="language-plaintext highlighter-rouge">initSnake</code> 初始化蛇的方向 长度 然后加载内存中的头部和身体y.
+<code class="language-plaintext highlighter-rouge">$10</code> 保存了头的位置 <code class="language-plaintext highlighter-rouge">$12</code> 保存了身体开始部位的信息, and <code class="language-plaintext highlighter-rouge">$14</code> 保存了尾部:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+lda #$11
+sta $10
+lda #$10
+sta $12
+lda #$0f
+sta $14
+lda #$04
+sta $11
+sta $13
+sta $15
+</code></pre></div></div>
+
+<p>经过上面的初始化. 内存结构如下:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0010: 11 04 10 04 0f 04
+</code></pre></div></div>
+
+<p>表示了显示的3个地址信息 <code class="language-plaintext highlighter-rouge">$0411</code>, <code class="language-plaintext highlighter-rouge">$0410</code> 和
+<code class="language-plaintext highlighter-rouge">$040f</code> 这里使用了间接寻址.</p>
+
+<p>在<code class="language-plaintext highlighter-rouge">generateApplePosition</code>, 初始化为随机位置.首先加上随机数到累加器 (<code class="language-plaintext highlighter-rouge">$fe</code> 会产生随机数). 然后存储到内存<code class="language-plaintext highlighter-rouge">$00</code>. 接着再次加载一个随机数，然后<code class="language-plaintext highlighter-rouge">AND</code> <code class="language-plaintext highlighter-rouge">$03</code>.进行位运算.</p>
+
+<p>十六进制 <code class="language-plaintext highlighter-rouge">$03</code>写成二进制 <code class="language-plaintext highlighter-rouge">00000011</code>.  <code class="language-plaintext highlighter-rouge">AND</code> 操作码表示参数与累加器A进行AND位运算. 比如，累加器保存的是 <code class="language-plaintext highlighter-rouge">10101010</code>,与 <code class="language-plaintext highlighter-rouge">AND</code>
+with <code class="language-plaintext highlighter-rouge">00000011</code> AND运算后就是 <code class="language-plaintext highlighter-rouge">00000010</code>.</p>
+
+<p>将0到255的数转换到0到3.</p>
+
+<p>然后，数字 <code class="language-plaintext highlighter-rouge">2</code> 添加到累加器A，则产生了一个2到5的随机数.</p>
+
+<p>这个子程序最终产生一个随机数到 <code class="language-plaintext highlighter-rouge">$00</code>, 和一个2到5的随机申诉到<code class="language-plaintext highlighter-rouge">$01</code>. 也就是
+<code class="language-plaintext highlighter-rouge">$0200</code> 到 <code class="language-plaintext highlighter-rouge">$05ff</code>: 内存的一个随机位置，表示模拟显示的位置.</p>
+
+<h3 id="the-game-loop">游戏循环中</h3>
+
+<p>与大多数游戏的循环相似，接受用户输入，更新游戏状态，渲染游戏状态.</p>
+
+<h4 id="reading-the-input">渲染输入</h4>
+
+<p>在 <code class="language-plaintext highlighter-rouge">readKeys</code>, 接受用户的输入， <code class="language-plaintext highlighter-rouge">$ff</code>模拟保存了最后一个键盘按键信息.被加载到累加器A,然后与 <code class="language-plaintext highlighter-rouge">$77</code>
+(the hex code for W), <code class="language-plaintext highlighter-rouge">$64</code> (D), <code class="language-plaintext highlighter-rouge">$73</code> (S) 和 <code class="language-plaintext highlighter-rouge">$61</code> (A)比较. 如果相等执行修改方向的逻辑(<code class="language-plaintext highlighter-rouge">upKey</code>, <code class="language-plaintext highlighter-rouge">rightKey</code>, etc.) 用来检查是否反向操.</p>
+
+<p>方向使用
+1, 2, 4 和 8. 其二进制如下 <code class="language-plaintext highlighter-rouge">1</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1 =&gt; 0001 (up)
+2 =&gt; 0010 (right)
+4 =&gt; 0100 (down)
+8 =&gt; 1000 (left)
+</code></pre></div></div>
+
+<p>指令 <code class="language-plaintext highlighter-rouge">BIT</code>与<code class="language-plaintext highlighter-rouge">AND</code>相似, 只用来设置标志位，忽略计算结果.例如, <code class="language-plaintext highlighter-rouge">0001 AND 0001</code>不是0, but <code class="language-plaintext highlighter-rouge">0001 AND 0010</code>是0.</p>
+
+<p>So, looking at <code class="language-plaintext highlighter-rouge">upKey</code>, 如果当前方向是 down (4), 检查零位标志位. <code class="language-plaintext highlighter-rouge">BNE</code> 就是 “branch if the zero flag is clear”,因此跳转到分支<code class="language-plaintext highlighter-rouge">illegalMove</code>.否则设置新的方向.</p>
+
+<h4 id="updating-the-game-state">更新游戏状态</h4>
+
+<p>在<code class="language-plaintext highlighter-rouge">checkCollision</code>中, 分为 <code class="language-plaintext highlighter-rouge">checkAppleCollision</code> and
+<code class="language-plaintext highlighter-rouge">checkSnakeCollision</code>. <code class="language-plaintext highlighter-rouge">checkAppleCollision</code> 只是检查是否与头部碰撞，如果碰撞则随机产生新的，.</p>
+
+<p><code class="language-plaintext highlighter-rouge">checkSnakeCollision</code> 检查蛇的身体与头的碰撞.</p>
+
+
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  
+0    1    2    3    4
+Head                 Tail
+
+[1,5][1,4][1,3][1,2][2,2]    Starting position
+
+[1,5][1,4][1,3][1,2][1,2]    Value of (3) is copied into (4)
+
+[1,5][1,4][1,3][1,3][1,2]    Value of (2) is copied into (3)
+
+[1,5][1,4][1,4][1,3][1,2]    Value of (1) is copied into (2)
+
+[1,5][1,5][1,4][1,3][1,2]    Value of (0) is copied into (1)
+
+[0,5][1,5][1,4][1,3][1,2]    Value of (0) is updated based on direction
+</code></pre></div></div>
+
+<p>At a low level, this subroutine is slightly more complex. First, the length is
+loaded into the <code class="language-plaintext highlighter-rouge">X</code> register, which is then decremented. The snippet below
+shows the starting memory for the snake.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Memory location: $10 $11 $12 $13 $14 $15
+
+Value:           $11 $04 $10 $04 $0f $04
+</code></pre></div></div>
+
+<p>The length is initialized to <code class="language-plaintext highlighter-rouge">4</code>, so <code class="language-plaintext highlighter-rouge">X</code> starts off as <code class="language-plaintext highlighter-rouge">3</code>. <code class="language-plaintext highlighter-rouge">LDA $10,x</code> loads the
+value of <code class="language-plaintext highlighter-rouge">$13</code> into <code class="language-plaintext highlighter-rouge">A</code>, then <code class="language-plaintext highlighter-rouge">STA $12,x</code> stores this value into <code class="language-plaintext highlighter-rouge">$15</code>. <code class="language-plaintext highlighter-rouge">X</code> is
+decremented, and we loop. Now <code class="language-plaintext highlighter-rouge">X</code> is <code class="language-plaintext highlighter-rouge">2</code>, so we load <code class="language-plaintext highlighter-rouge">$12</code> and store it into
+<code class="language-plaintext highlighter-rouge">$14</code>. This loops while <code class="language-plaintext highlighter-rouge">X</code> is positive (<code class="language-plaintext highlighter-rouge">BPL</code> means “branch if positive”).</p>
+
+<p>Once the values have been shifted down the snake, we have to work out what to
+do with the head. The direction is first loaded into <code class="language-plaintext highlighter-rouge">A</code>. <code class="language-plaintext highlighter-rouge">LSR</code> means “logical
+shift right”, or “shift all the bits one position to the right”. The least
+significant bit is shifted into the carry flag, so if the accumulator is <code class="language-plaintext highlighter-rouge">1</code>,
+after <code class="language-plaintext highlighter-rouge">LSR</code> it is <code class="language-plaintext highlighter-rouge">0</code>, with the carry flag set.</p>
+
+<p>To test whether the direction is <code class="language-plaintext highlighter-rouge">1</code>, <code class="language-plaintext highlighter-rouge">2</code>, <code class="language-plaintext highlighter-rouge">4</code> or <code class="language-plaintext highlighter-rouge">8</code>, the code continually
+shifts right until the carry is set. One <code class="language-plaintext highlighter-rouge">LSR</code> means “up”, two means “right”,
+and so on.</p>
+
+<p>The next bit updates the head of the snake depending on the direction. This is
+probably the most complicated part of the code, and it’s all reliant on how
+memory locations map to the screen, so let’s look at that in more detail.</p>
+
+<p>You can think of the screen as four horizontal strips of 32 × 8 pixels.
+These strips map to <code class="language-plaintext highlighter-rouge">$0200-$02ff</code>, <code class="language-plaintext highlighter-rouge">$0300-$03ff</code>, <code class="language-plaintext highlighter-rouge">$0400-$04ff</code> and <code class="language-plaintext highlighter-rouge">$0500-$05ff</code>.
+The first rows of pixels are <code class="language-plaintext highlighter-rouge">$0200-$021f</code>, <code class="language-plaintext highlighter-rouge">$0220-$023f</code>, <code class="language-plaintext highlighter-rouge">$0240-$025f</code>, etc.</p>
+
+<p>As long as you’re moving within one of these horizontal strips, things are
+simple. For example, to move right, just increment the least significant byte
+(e.g. <code class="language-plaintext highlighter-rouge">$0200</code> becomes <code class="language-plaintext highlighter-rouge">$0201</code>). To go down, add <code class="language-plaintext highlighter-rouge">$20</code> (e.g. <code class="language-plaintext highlighter-rouge">$0200</code> becomes
+<code class="language-plaintext highlighter-rouge">$0220</code>). Left and up are the reverse.</p>
+
+<p>Going between sections is more complicated, as we have to take into account the
+most significant byte as well. For example, going down from <code class="language-plaintext highlighter-rouge">$02e1</code> should lead
+to <code class="language-plaintext highlighter-rouge">$0301</code>. Luckily, this is fairly easy to accomplish. Adding <code class="language-plaintext highlighter-rouge">$20</code> to <code class="language-plaintext highlighter-rouge">$e1</code>
+results in <code class="language-plaintext highlighter-rouge">$01</code> and sets the carry bit. If the carry bit was set, we know we
+also need to increment the most significant byte.</p>
+
+<p>After a move in each direction, we also need to check to see if the head
+would become out of bounds. This is handled differently for each direction. For
+left and right, we can check to see if the head has effectively “wrapped
+around”. Going right from <code class="language-plaintext highlighter-rouge">$021f</code> by incrementing the least significant byte
+would lead to <code class="language-plaintext highlighter-rouge">$0220</code>, but this is actually jumping from the last pixel of the
+first row to the first pixel of the second row. So, every time we move right,
+we need to check if the new least significant byte is a multiple of <code class="language-plaintext highlighter-rouge">$20</code>. This
+is done using a bit check against the mask <code class="language-plaintext highlighter-rouge">$1f</code>. Hopefully the illustration
+below will show you how masking out the lowest 5 bits reveals whether a number
+is a multiple of <code class="language-plaintext highlighter-rouge">$20</code> or not.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$20: 0010 0000
+$40: 0100 0000
+$60: 0110 0000
+
+$1f: 0001 1111
+</code></pre></div></div>
+
+<p>I won’t explain in depth how each of the directions work, but the above
+explanation should give you enough to work it out with a bit of study.</p>
+
+<h4 id="rendering-the-game">Rendering the game</h4>
+
+<p>Because the game state is stored in terms of pixel locations, rendering the
+game is very straightforward. The first subroutine, <code class="language-plaintext highlighter-rouge">drawApple</code>, is extremely
+simple. It sets <code class="language-plaintext highlighter-rouge">Y</code> to zero, loads a random colour into the accumulator, then
+stores this value into <code class="language-plaintext highlighter-rouge">($00),y</code>. <code class="language-plaintext highlighter-rouge">$00</code> is where the location of the apple is
+stored, so <code class="language-plaintext highlighter-rouge">($00),y</code> dereferences to this memory location. Read the “Indirect
+indexed” section in <a href="#addressing">Addressing modes</a> for more details.</p>
+
+<p>Next comes <code class="language-plaintext highlighter-rouge">drawSnake</code>. This is pretty simple too - we first undraw the tail
+and then draw the head. <code class="language-plaintext highlighter-rouge">X</code> is set to the length of the snake, so we can index
+to the right pixel, and we set <code class="language-plaintext highlighter-rouge">A</code> to zero then perform the write using the
+indexed indirect addressing mode. Then we reload <code class="language-plaintext highlighter-rouge">X</code> to index to the head, set
+<code class="language-plaintext highlighter-rouge">A</code> to one and store it at <code class="language-plaintext highlighter-rouge">($10,x)</code>. <code class="language-plaintext highlighter-rouge">$10</code> stores the two-byte location of
+the head, so this draws a white pixel at the current head position. As only
+the head and the tail of the snake move, this is enough to keep the snake
+moving.</p>
+
+<p>The last subroutine, <code class="language-plaintext highlighter-rouge">spinWheels</code>, is just there because the game would run too
+fast otherwise. All <code class="language-plaintext highlighter-rouge">spinWheels</code> does is count <code class="language-plaintext highlighter-rouge">X</code> down from zero until it hits
+zero again. The first <code class="language-plaintext highlighter-rouge">dex</code> wraps, making <code class="language-plaintext highlighter-rouge">X</code> <code class="language-plaintext highlighter-rouge">#$ff</code>.</p>
+
+
+      </section>
+    </div>
+
+    <script src="./static/jquery.min.js"></script>
+    <script src="./static/es5-shim.js"></script>
+    <script src="./static/assembler.js"></script>
+    <script src="./static/scale.fix.js"></script>
+  
+  
+
+</body></html>
